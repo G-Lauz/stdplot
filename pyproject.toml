@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stdplot"
+authors = [
+    { name="G-Lauz", email="gabriel.lauzier@usherbrooke.ca" },
+]
+description = "A standardize wrapper around `matplotlib` targetting a variety of canvases."
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent",
+]
+dynamic = ["version"]
+dependencies = ["matplotlib==3.11.2"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["stdplot*"]
+
+[tool.setuptools.package-data]
+stdplot = ["py.typed"]
+
+[tool.setuptools.dynamic]
+version = {file = "VERSION"}
+
+[tool.ruff]
+target-version = "py311"
+
+[tool.pyright]
+typeCheckingMode = "standard"

@@ -1,0 +1,62 @@
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[lint]
+select = [
+    "F",     # pyflakes
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+    "I",     # isort            -> replaces the isort pre-commit hook
+    "N",     # pep8-naming
+    "UP",    # pyupgrade        -> rewrites Dict/List/Optional to dict/list/| None
+    "FA",    # future-annotations -> requires `from __future__ import annotations`
+    "ANN",   # annotations      -> every param and every return, including -> None
+    "D",     # pydocstyle       -> Google sections, summary on the opening line
+    "B",     # bugbear          -> mutable defaults, common footguns
+    "A",     # builtins         -> catches `compile` / `any` shadowing
+    "C4",    # comprehensions
+    "RET",   # return           -> early return, no else-after-return
+    "SIM",   # simplify
+    "PTH",   # use-pathlib      -> retires the last two os.path sites
+    "TID",   # tidy-imports     -> see flake8-tidy-imports below
+    "TRY",   # tryceratops      -> raise-from, no try/except/pass
+    "BLE",   # blind-except     -> bans bare `except:` and `except Exception:`
+    "RSE",   # raise            -> no redundant parens on raise
+    "ERA",   # eradicate        -> commented-out code
+    "TD",    # todos            -> TODO formatting only, not TODO existence
+    "T20",   # print            -> allowed only in the presentation layer, below
+    "PT",    # pytest-style     -> parametrize shape, pytest.raises needs match=
+    "PL",    # pylint           -> replaces the vendored 429-line pylintrc
+    "TC",    # type-checking    -> moves annotation-only imports into TYPE_CHECKING
+    "RUF",   # ruff-specific    -> catches implicit-Optional (RUF013)
+]
+
+ignore = [
+    "D104",     # package docstring: __init__.py is usually just re-exports
+    "TD002",    # TODO author: solo project, the author is always me
+    "TD003",    # TODO issue link: not running an issue tracker
+    "TRY003",   # long message outside exception class: the errors.py pattern
+                # already puts formatting in __init__, this fires on stdlib raises
+    "PLR0913",  # too many arguments: dataclass-heavy code trips this constantly
+    "COM812",   # trailing comma: the formatter owns this
+]
+
+# Ruff cannot know your layer boundaries, so declare where printing is legitimate.
+# Every path here is presentation, tooling, or demo code.
+[lint.per-file-ignores]
+".claude/hooks/**" = ["T20", "D", "ANN", "INP001"]
+"examples/**" = ["T20", "D", "ANN", "INP001"]
+"scripts/**" = ["T20", "D", "ANN", "INP001"]
+"setup.py" = ["T20", "D", "ANN", "INP001"]
+"tests/**" = ["D", "ANN", "PLR2004", "S101"]
+"__init__.py" = ["F401"]          # re-exports are the point
+
+[lint.pydocstyle]
+convention = "google"             # keeps Args:/Returns:, drops reST and epydoc
+
+[lint.flake8-tidy-imports]
+ban-relative-imports = "parents"  # `.` allowed inside a subpackage, `..` never
+
+[format]
+docstring-code-format = true      # formats code inside the one fenced docstring block

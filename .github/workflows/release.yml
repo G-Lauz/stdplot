@@ -1,0 +1,99 @@
+name: Release
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  lint-and-test:
+    uses: ./.github/workflows/validation.yml
+
+  release:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      tag_name: ${{ steps.generate_version_output.outputs.tag_name }}
+      package_version: ${{ steps.generate_version_output.outputs.short_version }}
+      release_required: ${{ steps.release_decision.outputs.required }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Compute version number from tags/commits
+        uses: paulhatch/semantic-version@v6.0.2
+        id: semantic_version
+        with:
+          tag_prefix: "v"
+          major_pattern: "(MAJOR)"
+          minor_pattern: "(MINOR)"
+          version_format: "${major}.${minor}.${patch}-pre${increment}"
+          bump_each_commit: true
+          bump_each_commit_patch_pattern: "(PATCH)"
+
+      - name: Generate version number
+        id: generate_version_output
+        run: |
+          echo "version=${{ steps.semantic_version.outputs.version }}" >> "$GITHUB_OUTPUT"
+          echo "short_version=${{ steps.semantic_version.outputs.major }}.${{ steps.semantic_version.outputs.minor }}.${{ steps.semantic_version.outputs.patch }}" >> "$GITHUB_OUTPUT"
+          echo "tag_name=${{ steps.semantic_version.outputs.version_tag }}" >> "$GITHUB_OUTPUT"
+        shell: bash
+
+      - name: Check whether the version has already been released
+        id: release_decision
+        run: |
+          if git rev-parse -q --verify "refs/tags/${{ steps.semantic_version.outputs.version_tag }}" > /dev/null; then
+            echo "required=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "required=true" >> "$GITHUB_OUTPUT"
+          fi
+        shell: bash
+
+      - name: Display version
+        run: echo "Version ${{ steps.generate_version_output.outputs.version }}"
+        shell: bash
+
+      - name: Create release
+        if: steps.release_decision.outputs.required == 'true'
+        uses: softprops/action-gh-release@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ steps.generate_version_output.outputs.tag_name }}
+          name: ${{ github.event.repository.name }}-${{ steps.generate_version_output.outputs.tag_name }}
+          body: |
+            Last build of ${{ github.event.repository.name }} Python package.
+          draft: false
+          prerelease: true
+
+  upload:
+    needs: release
+    if: needs.release.outputs.release_required == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Set package version
+        run: |
+          printf '%s\n' "${{ needs.release.outputs.package_version }}" > VERSION
+
+      - name: Build
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install --upgrade build
+          python3 -m build
+
+      - name: Upload wheel
+        uses: softprops/action-gh-release@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ needs.release.outputs.tag_name }}
+          files: dist/*.whl
+          draft: false
+          prerelease: true
