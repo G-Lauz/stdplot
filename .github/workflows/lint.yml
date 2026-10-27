@@ -20,6 +20,6 @@ jobs:
 
       - run: pip install pre-commit
 
-      - run: pip install -e . -r requirements.txt
+      - run: pip install -e ".[all]" -r requirements.txt
 
       - run: pre-commit run --all-files --show-diff-on-failure

@@ -14,10 +14,17 @@ classifiers = [
   "Intended Audience :: Developers",
   "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3",
+  "Typing :: Typed",
+  "Framework :: Matplotlib",
   "Operating System :: OS Independent",
 ]
 dynamic = ["version"]
-dependencies = ["matplotlib==3.11.2"]
+dependencies = ["matplotlib>=3.11.2,<3.13", "scienceplots>=2.2"]
+
+[project.optional-dependencies]
+qt = ["PySide6"]
+notebook = ["ipython"]
+all = ["PySide6", "ipython"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -34,3 +41,8 @@ target-version = "py311"
 
 [tool.pyright]
 typeCheckingMode = "standard"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# tests/stdplot/ has no __init__.py; importlib mode keeps it from shadowing the package.
+addopts = "--import-mode=importlib"

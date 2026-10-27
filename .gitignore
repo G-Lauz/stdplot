@@ -138,3 +138,8 @@ AGENTS.md
 # IDE
 .zed
 .vscode
+
+.ruff_cache/
+
+# Figures written by the examples
+examples/figures/
