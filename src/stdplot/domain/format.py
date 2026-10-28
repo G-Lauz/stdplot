@@ -1,4 +1,4 @@
-"""Enumerations of the export formats, layout engines and display backends."""
+"""Enumerations of the export formats, margins, layout engines and display backends."""
 
 from __future__ import annotations
 
@@ -14,6 +14,13 @@ class Format(enum.Enum):
     PDF = "pdf"
 
 
+class Bbox(enum.Enum):
+    """Margins of an exported file; the value is matplotlib's `savefig.bbox` setting."""
+
+    STANDARD = "standard"
+    TIGHT = "tight"
+
+
 class Layout(enum.Enum):
     """Layout engine re-run before every export; the value is matplotlib's name."""
 
@@ -23,8 +30,9 @@ class Layout(enum.Enum):
 
 
 class Display(enum.Enum):
-    """Where a shown figure appears."""
+    """Where a shown figure appears; `NONE` shows it nowhere."""
 
     AUTO = "auto"
     NOTEBOOK = "notebook"
     QT = "qt"
+    NONE = "none"

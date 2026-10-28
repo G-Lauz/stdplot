@@ -5,6 +5,7 @@ import typing
 from stdplot.application import Display
 
 from .notebook import NotebookDisplayer
+from .null import NullDisplayer
 from .qt import QtDisplayer
 
 if typing.TYPE_CHECKING:
@@ -20,11 +21,19 @@ def select_displayer(display: Display, environment: Environment, preview: Target
         preview: Format and resolution an inline figure is rendered with.
 
     Returns:
-        The notebook displayer when asked for or inside a Jupyter kernel, the Qt
-        displayer otherwise.
+        The requested displayer. For `Display.AUTO`: the notebook displayer inside a
+        Jupyter kernel, the null displayer when the matplotlib backend cannot open
+        windows (`matplotlib.use("Agg")` or `MPLBACKEND=Agg`), the Qt displayer
+        otherwise.
     """
-    is_auto_notebook = display is Display.AUTO and environment.in_notebook
-    use_notebook = display is Display.NOTEBOOK or is_auto_notebook
-    if use_notebook:
+    if display is Display.NONE:
+        return NullDisplayer()
+    if display is Display.NOTEBOOK:
         return NotebookDisplayer(preview)
+    if display is Display.QT:
+        return QtDisplayer()
+    if environment.in_notebook:
+        return NotebookDisplayer(preview)
+    if environment.headless:
+        return NullDisplayer()
     return QtDisplayer()

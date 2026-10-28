@@ -14,7 +14,7 @@ from stdplot.domain.errors import (
 @pytest.mark.parametrize(
     "error",
     [
-        LatexNotFoundError(),
+        LatexNotFoundError("pdflatex"),
         MissingOutputError("an output_dir"),
         MissingDependencyError("qt"),
         UnknownStyleError(("missing",)),
@@ -34,6 +34,14 @@ def test_missing_dependency_error_is_import_error() -> None:
 
 def test_missing_dependency_error_names_extra() -> None:
     assert 'pip install "stdplot[notebook]"' in str(MissingDependencyError("notebook"))
+
+
+def test_latex_not_found_error_names_texsystem() -> None:
+    assert "`xelatex` is not on the PATH" in str(LatexNotFoundError("xelatex"))
+
+
+def test_latex_not_found_error_suggests_screen_target() -> None:
+    assert "targets=(stdplot.SCREEN,)" in str(LatexNotFoundError("pdflatex"))
 
 
 def test_unknown_style_error_lists_names() -> None:

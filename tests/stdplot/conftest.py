@@ -16,12 +16,12 @@ if typing.TYPE_CHECKING:
 
 @pytest.fixture
 def headless_environment() -> Environment:
-    return Environment(latex_available=False, in_notebook=False)
+    return Environment(latex_available=False, in_notebook=False, headless=True)
 
 
 @pytest.fixture
 def latex_environment() -> Environment:
-    return Environment(latex_available=True, in_notebook=False)
+    return Environment(latex_available=True, in_notebook=False, headless=True)
 
 
 @pytest.fixture

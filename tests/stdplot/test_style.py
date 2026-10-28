@@ -3,8 +3,8 @@ from __future__ import annotations
 from stdplot.domain.style import NO_LATEX_STYLE, LatexSettings, Style
 
 
-def test_latex_settings_to_rc_uses_standard_bbox() -> None:
-    assert LatexSettings().to_rc()["savefig.bbox"] == "standard"
+def test_latex_settings_to_rc_leaves_bbox_to_targets() -> None:
+    assert "savefig.bbox" not in LatexSettings().to_rc()
 
 
 def test_latex_settings_to_rc_maps_usetex() -> None:

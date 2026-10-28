@@ -23,9 +23,6 @@ class LatexSettings:
             "font.family": self.font_family,
             "text.usetex": self.usetex,
             "pgf.rcfonts": self.rcfonts,
-            # The science style crops exports to a tight bbox, which would make a PGF
-            # narrower than the width its target was sized to fit.
-            "savefig.bbox": "standard",
         }
 
 

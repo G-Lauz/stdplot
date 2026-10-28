@@ -2,8 +2,16 @@ from __future__ import annotations
 
 import pytest
 
-from stdplot.domain.format import Format
-from stdplot.domain.target import IEEE_COLUMN_WIDTH_IN, IEEE_PGF, Size, Target, ieee_pgf
+from stdplot.domain.format import Bbox, Format
+from stdplot.domain.target import (
+    IEEE_COLUMN_WIDTH_IN,
+    IEEE_PGF,
+    SCREEN,
+    Size,
+    Target,
+    ieee_pgf,
+    pgf,
+)
 
 
 @pytest.mark.parametrize(("width", "height"), [(0.0, 1.0), (1.0, 0.0), (-1.0, 1.0)])
@@ -20,15 +28,31 @@ def test_size_as_tuple_is_width_then_height() -> None:
     assert Size(4.0, 3.0).as_tuple() == (4.0, 3.0)
 
 
-def test_ieee_pgf_scales_column_width() -> None:
-    target = ieee_pgf(scale=0.5, aspect=1.0)
+def test_target_default_bbox_is_tight() -> None:
+    assert Target(Format.SVG).bbox is Bbox.TIGHT
 
-    assert target.size == Size(IEEE_COLUMN_WIDTH_IN / 2, IEEE_COLUMN_WIDTH_IN / 2)
+
+def test_screen_has_no_size() -> None:
+    assert SCREEN.size is None
+
+
+def test_pgf_applies_width_and_aspect() -> None:
+    assert pgf(6.0, aspect=0.5).size == Size(6.0, 3.0)
+
+
+def test_pgf_keeps_standard_bbox() -> None:
+    target = pgf(6.0)
+
+    assert target.format is Format.PGF
+    assert target.bbox is Bbox.STANDARD
+
+
+def test_ieee_pgf_is_pgf_of_scaled_column() -> None:
+    assert ieee_pgf(scale=0.5, aspect=1.0, dpi=150) == pgf(IEEE_COLUMN_WIDTH_IN / 2, 1.0, 150)
 
 
 def test_ieee_pgf_default_spans_column() -> None:
-    assert IEEE_PGF.format is Format.PGF
-    assert IEEE_PGF.size.width == IEEE_COLUMN_WIDTH_IN
+    assert pgf(IEEE_COLUMN_WIDTH_IN) == IEEE_PGF
 
 
 @pytest.mark.parametrize("file_format", list(Format))

@@ -20,7 +20,7 @@ classifiers = [
   "Operating System :: OS Independent",
 ]
 dynamic = ["version"]
-dependencies = ["matplotlib>=3.11.2,<3.13", "scienceplots>=2.2"]
+dependencies = ["matplotlib>=3.10,<4", "scienceplots>=2.2"]
 
 [project.optional-dependencies]
 qt = ["PySide6"]

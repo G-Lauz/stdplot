@@ -7,6 +7,7 @@ from stdplot.application import (
     IEEE_PGF,
     SCREEN,
     AxesGrid,
+    Bbox,
     Config,
     Display,
     Format,
@@ -18,16 +19,19 @@ from stdplot.application import (
     Size,
     StdplotError,
     Style,
+    SubplotOptions,
     Target,
     UnknownStyleError,
     ieee_pgf,
+    pgf,
 )
-from stdplot.presentation.api import figure, plot
+from stdplot.presentation.api import Plotter, figure, plot
 
 __all__ = [
     "IEEE_PGF",
     "SCREEN",
     "AxesGrid",
+    "Bbox",
     "Config",
     "Display",
     "Format",
@@ -36,12 +40,15 @@ __all__ = [
     "Layout",
     "MissingDependencyError",
     "MissingOutputError",
+    "Plotter",
     "Size",
     "StdplotError",
     "Style",
+    "SubplotOptions",
     "Target",
     "UnknownStyleError",
     "figure",
     "ieee_pgf",
+    "pgf",
     "plot",
 ]

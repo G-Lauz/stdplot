@@ -8,14 +8,20 @@ class StdplotError(Exception):
 
 
 class LatexNotFoundError(StdplotError):
-    """A target needs LaTeX, but no LaTeX installation is on the PATH."""
+    """A target needs LaTeX, but the configured TeX system is not on the PATH."""
 
-    def __init__(self) -> None:
-        """Build the message explaining why LaTeX is needed."""
+    def __init__(self, texsystem: str) -> None:
+        """Build the message naming the missing binary and how to do without it.
+
+        Args:
+            texsystem: The TeX binary PGF export runs, such as "pdflatex".
+        """
         super().__init__(
-            "A PGF target needs a LaTeX installation, but `latex` is not on the PATH. "
-            "Install a TeX distribution or remove the PGF targets from the config."
+            f"A PGF target needs LaTeX, but `{texsystem}` is not on the PATH. "
+            "Install a TeX distribution, or save without PGF: "
+            "`Config(targets=(stdplot.SCREEN,))`."
         )
+        self.texsystem = texsystem
 
 
 class MissingOutputError(StdplotError, ValueError):

@@ -1,9 +1,11 @@
 r"""Export: draw once, write a PGF for LaTeX plus SVG and PNG copies.
 
 With `save=True`, every target of the config is written to `output_dir` when the
-block exits. A target is a format, a size in inches and a dpi: the figure is resized
-for each one, so `IEEE_PGF` comes out exactly one IEEE column wide and its text
-matches the paper's fonts. Include it with `\input{figures/step_response.pgf}`.
+block exits, and `config.paths(name)` names the written files. A target is a format,
+a size in inches, a dpi and margins: the figure is resized for each target with a
+size, so `IEEE_PGF` comes out exactly one IEEE column wide and its text matches the
+paper's fonts. Include it with `\input{figures/step_response.pgf}`. A target without
+a size, such as `SCREEN`, is written at the size the figure was drawn at.
 
 PGF needs a LaTeX installation. Without one, stdplot raises `LatexNotFoundError`
 before the drawing code runs; this example then writes the other targets only.
@@ -25,7 +27,7 @@ PAPER = stdplot.Config(
     output_dir=OUTPUT_DIR,
     targets=(
         stdplot.IEEE_PGF,  # one IEEE column, for the paper
-        stdplot.SCREEN,  # 8 x 6 in SVG, for slides
+        stdplot.SCREEN,  # SVG at the drawn size (8 x 6 in by default), for slides
         stdplot.Target(stdplot.Format.PNG, stdplot.Size(6.0, 4.0), dpi=200),
     ),
 )
@@ -43,15 +45,16 @@ def draw_step_response(ax: Axes) -> None:
     ax.legend(title="Damping ratio")
 
 
+config = PAPER
 try:
-    with stdplot.figure("step_response", config=PAPER, save=True, show=False) as (_, ax):
+    with stdplot.Plotter(config, save=True, show=False).figure("step_response") as (_, ax):
         draw_step_response(ax)
 except stdplot.LatexNotFoundError as error:
     print(f"{error}\nWriting the targets that do not need LaTeX.")
     without_latex = tuple(target for target in PAPER.targets if not target.requires_latex)
     config = dataclasses.replace(PAPER, targets=without_latex)
-    with stdplot.figure("step_response", config=config, save=True, show=False) as (_, ax):
+    with stdplot.Plotter(config, save=True, show=False).figure("step_response") as (_, ax):
         draw_step_response(ax)
 
-for path in sorted(OUTPUT_DIR.glob("step_response.*")):
+for path in config.paths("step_response"):
     print(f"Wrote {path}")

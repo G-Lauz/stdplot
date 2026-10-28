@@ -1,10 +1,10 @@
-"""Export targets: what format a figure is written to, and at what size."""
+"""Export targets: what format a figure is written to, at what size and with what margins."""
 
 from __future__ import annotations
 
 import dataclasses
 
-from .format import Format
+from .format import Bbox, Format
 
 IEEE_COLUMN_WIDTH_IN = 3.40067
 
@@ -46,11 +46,21 @@ class Size:
 
 @dataclasses.dataclass(frozen=True)
 class Target:
-    """One file a figure is exported to."""
+    """One file a figure is exported to.
+
+    Attributes:
+        format: File format.
+        size: Size the file is written at; `None` keeps the size the figure was drawn at.
+        dpi: Resolution of the raster output and of the raster elements embedded in it.
+        bbox: Margins of the file. A PGF sized to a column must use `Bbox.STANDARD`,
+            since a tight bbox would make it narrower than the column; `pgf` and
+            `ieee_pgf` do.
+    """
 
     format: Format
-    size: Size
+    size: Size | None = None
     dpi: int = 300
+    bbox: Bbox = Bbox.TIGHT
 
     @property
     def requires_latex(self) -> bool:
@@ -69,6 +79,20 @@ class Target:
         return f"{name}.{self.format.value}"
 
 
+def pgf(width: float, aspect: float = 6 / 8, dpi: int = 300) -> Target:
+    """Build a PGF target exactly `width` inches wide, such as a LaTeX text width.
+
+    Args:
+        width: Width of the PGF, in inches.
+        aspect: Height divided by width.
+        dpi: Resolution of the raster elements embedded in the PGF.
+
+    Returns:
+        The PGF target, with standard margins so it keeps its width.
+    """
+    return Target(Format.PGF, Size.from_width(width, aspect), dpi, bbox=Bbox.STANDARD)
+
+
 def ieee_pgf(scale: float = 1.0, aspect: float = 6 / 8, dpi: int = 300) -> Target:
     """Build a PGF target sized to a fraction of an IEEE column.
 
@@ -80,8 +104,8 @@ def ieee_pgf(scale: float = 1.0, aspect: float = 6 / 8, dpi: int = 300) -> Targe
     Returns:
         The PGF target.
     """
-    return Target(Format.PGF, Size.from_width(IEEE_COLUMN_WIDTH_IN * scale, aspect), dpi)
+    return pgf(IEEE_COLUMN_WIDTH_IN * scale, aspect, dpi)
 
 
 IEEE_PGF = ieee_pgf()
-SCREEN = Target(Format.SVG, Size(8.0, 6.0), dpi=100)
+SCREEN = Target(Format.SVG, dpi=100)

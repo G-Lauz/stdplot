@@ -5,6 +5,9 @@ arguments. Every call draws a fresh figure, saves and shows it, then returns wha
 the function returned. The figure is named after the function unless you pass a
 name, and `nrows`/`ncols` give the function an `AxesGrid`, as with `stdplot.figure`.
 
+Here the decorator comes from a `Plotter` that saves every figure, so the whole
+script turns saving on in one place.
+
 Run: python examples/decorator.py
 """
 
@@ -18,6 +21,7 @@ import stdplot
 
 OUTPUT_DIR = pathlib.Path(__file__).parent / "figures"
 SCREEN_ONLY = stdplot.Config(output_dir=OUTPUT_DIR, targets=(stdplot.SCREEN,))
+PLOTS = stdplot.Plotter(SCREEN_ONLY, save=True)
 EPOCHS = np.arange(1, 41)
 
 
@@ -31,7 +35,7 @@ def simulate_run(learning_rate: float, rng: np.random.Generator) -> tuple[np.nda
 
 
 # Saved as figures/loss_curve.svg, after the function's name.
-@stdplot.plot(config=SCREEN_ONLY, save=True)
+@PLOTS.plot()
 def loss_curve(fig: Figure, ax: Axes, train: np.ndarray, validation: np.ndarray) -> int:
     """Plot one run and return the epoch with the lowest validation loss."""
     best = int(np.argmin(validation))
@@ -45,7 +49,7 @@ def loss_curve(fig: Figure, ax: Axes, train: np.ndarray, validation: np.ndarray)
 
 
 # A custom name and a 1x2 grid: the function receives an AxesGrid.
-@stdplot.plot("learning_rate_sweep", ncols=2, config=SCREEN_ONLY, save=True)
+@PLOTS.plot("learning_rate_sweep", ncols=2)
 def compare_runs(
     fig: Figure, axes: stdplot.AxesGrid, runs: dict[str, tuple[np.ndarray, np.ndarray]]
 ) -> None:

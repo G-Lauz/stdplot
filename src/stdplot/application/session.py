@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import contextlib
+import functools
 import typing
 import warnings
 
@@ -52,14 +53,21 @@ def resolve_style(request: PlotRequest, environment: Environment) -> Style:
     if environment.latex_available:
         return style
     if request.needs_latex:
-        raise LatexNotFoundError
+        raise LatexNotFoundError(style.latex.texsystem)
     if not style.latex.usetex:
         return style
+    _warn_latex_missing()
+    return style.without_latex()
+
+
+@functools.cache
+def _warn_latex_missing() -> None:
+    # Cached so the warning fires once per process, whatever the warning filters say;
+    # the "default" filter alone keys on the location, which is shared by every figure.
     warnings.warn(
-        "LaTeX is not installed; rendering text with matplotlib's mathtext instead.",
+        "stdplot: LaTeX is not installed; rendering text with matplotlib's mathtext instead.",
         stacklevel=2,
     )
-    return style.without_latex()
 
 
 def check_styles(style: Style) -> None:
@@ -93,7 +101,7 @@ def session(
         environment: What the running process can do.
 
     Yields:
-        The figure, sized to the preview target, and its grid of axes.
+        The figure, at the requested size, and its grid of axes.
 
     Raises:
         LatexNotFoundError: A target needs LaTeX and it is not installed.
@@ -104,11 +112,15 @@ def session(
     config = request.config
     with matplotlib.style.context(style.to_rc_list()):
         # The ieee style raises figure.dpi to 600; the preview dpi keeps windows usable.
-        figure = Figure(figsize=config.preview.size.as_tuple(), dpi=config.preview.dpi)
+        figure = Figure(figsize=request.size.as_tuple(), dpi=config.preview.dpi)
         figure.set_layout_engine(config.layout.value)
-        grid = AxesGrid.from_figure(figure, request.nrows, request.ncols)
+        grid = AxesGrid.from_figure(figure, request.nrows, request.ncols, **request.subplots_kw)
         yield figure, grid
+        # fig.tight_layout() in the block swaps in a PlaceHolderLayoutEngine, which would
+        # freeze the margins computed at the drawn size into every target: labels clip
+        # once a figure drawn at 8 in is written as a 3.4 in PGF.
+        figure.set_layout_engine(config.layout.value)
         if request.save:
-            export(figure, config.targets, request.output_dir, request.name)
+            export(figure, config, request.name)
         if request.show:
             displayer.show(figure, request.name)

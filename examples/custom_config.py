@@ -4,13 +4,14 @@ A `Config` is an immutable dataclass, so a project defines its house style once 
 derives variants with `dataclasses.replace`. It sets:
 
 - `style`: scienceplots style names, plus the LaTeX settings applied on top of them;
-- `targets`: the files written when `save=True`;
-- `preview`: the size and dpi the figure is drawn and shown at;
+- `targets`: the files written when saving;
+- `size`: the size the figure is drawn at, and written at by targets without a size;
+- `preview`: the format and dpi of the figure shown inline in a notebook;
 - `layout`: the layout engine re-run before every export (`TIGHT`, `CONSTRAINED`, `NONE`);
-- `display`: where shown figures appear (`AUTO`, `NOTEBOOK` or `QT`).
+- `display`: where shown figures appear (`AUTO`, `NOTEBOOK`, `QT` or `NONE`).
 
-This example draws the same calibration plot twice: for a Nature-style article,
-then for slides.
+A `Plotter` binds a config to the save and show defaults of its figures. This example
+draws the same calibration plot twice: for a Nature-style article, then for slides.
 
 Run: python examples/custom_config.py
 """
@@ -37,12 +38,13 @@ ARTICLE = stdplot.Config(
         stdplot.Target(stdplot.Format.PDF, stdplot.Size.from_width(89 / 25.4, 0.75)),
         stdplot.Target(stdplot.Format.PNG, stdplot.Size.from_width(89 / 25.4, 0.75), dpi=600),
     ),
-    preview=stdplot.Target(stdplot.Format.SVG, stdplot.Size(6.0, 4.5), dpi=120),
+    size=stdplot.Size(6.0, 4.5),
+    preview=stdplot.Target(stdplot.Format.SVG, dpi=120),
     output_dir=OUTPUT_DIR / "article",
     layout=stdplot.Layout.CONSTRAINED,
 )
 
-# Keeps the preview and the layout engine; larger fonts and a 16:9 SVG for slides.
+# Keeps the size, preview and layout engine; larger fonts and a 16:9 SVG for slides.
 SLIDES = dataclasses.replace(
     ARTICLE,
     style=stdplot.Style(names=("science", "notebook")),
@@ -64,5 +66,5 @@ def draw_calibration(ax: Axes) -> None:
 
 
 for name, config in (("article", ARTICLE), ("slides", SLIDES)):
-    with stdplot.figure(f"calibration_{name}", config=config, save=True) as (_, ax):
+    with stdplot.Plotter(config, save=True).figure(f"calibration_{name}") as (_, ax):
         draw_calibration(ax)

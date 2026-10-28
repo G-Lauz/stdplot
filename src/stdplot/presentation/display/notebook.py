@@ -3,20 +3,16 @@
 from __future__ import annotations
 
 import dataclasses
+import importlib
 import io
 import typing
 
-from stdplot.application import Format, MissingDependencyError
+from stdplot.application import Format, MissingDependencyError, write
 
 if typing.TYPE_CHECKING:
     from matplotlib.figure import Figure
 
     from stdplot.application import Target
-
-try:
-    import IPython.display
-except ImportError:  # stdplot[notebook] is not installed
-    IPython = None
 
 
 @dataclasses.dataclass(frozen=True)
@@ -24,7 +20,7 @@ class NotebookDisplayer:
     """Shows figures inline, in the output of the running cell.
 
     Attributes:
-        target: Format and resolution the figure is rendered with.
+        target: Format, dpi, margins and optional size the figure is rendered with.
     """
 
     target: Target
@@ -39,15 +35,18 @@ class NotebookDisplayer:
         Raises:
             MissingDependencyError: IPython is not installed.
         """
-        if IPython is None:
-            raise MissingDependencyError("notebook")
+        # Imported here rather than with stdplot, so a script never pays for IPython.
+        try:
+            display = importlib.import_module("IPython.display")
+        except ImportError as error:
+            raise MissingDependencyError("notebook") from error
         buffer = io.BytesIO()
-        figure.savefig(buffer, format=self.target.format.value, dpi=self.target.dpi)
+        write(figure, self.target, buffer)
         data = buffer.getvalue()
         is_svg = self.target.format is Format.SVG
         image = (
-            IPython.display.SVG(data=data)
+            display.SVG(data=data)
             if is_svg
-            else IPython.display.Image(data=data, format=self.target.format.value)
+            else display.Image(data=data, format=self.target.format.value)
         )
-        IPython.display.display(image)
+        display.display(image)
