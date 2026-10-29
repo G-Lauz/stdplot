@@ -13,7 +13,7 @@ if typing.TYPE_CHECKING:
 
 # Without usetex, drawing never calls a TeX binary, whatever the machine has.
 NO_TEX = stdplot.Config(style=stdplot.Style(latex=stdplot.LatexSettings(usetex=False)))
-PLOTS = stdplot.Plotter(NO_TEX, show=False)
+PLOTS = stdplot.Stdplot(NO_TEX, show=False)
 
 
 def test_figure_1x1_yields_axes() -> None:
@@ -49,9 +49,9 @@ def test_figure_size_tuple_sets_figure_size() -> None:
 
 
 def test_figure_without_size_uses_config_size() -> None:
-    plotter = stdplot.Plotter(stdplot.Config(style=NO_TEX.style, size=stdplot.Size(5, 2)))
+    plots = stdplot.Stdplot(stdplot.Config(style=NO_TEX.style, size=stdplot.Size(5, 2)))
 
-    with plotter.figure("sized", show=False) as (fig, _):
+    with plots.figure("sized", show=False) as (fig, _):
         assert tuple(fig.get_size_inches()) == (5.0, 2.0)
 
 
@@ -59,7 +59,7 @@ def test_figure_size_writes_sizeless_target_at_it(tmp_path: pathlib.Path) -> Non
     target = stdplot.Target(stdplot.Format.SVG, dpi=72, bbox=stdplot.Bbox.STANDARD)
     config = stdplot.Config(style=NO_TEX.style, targets=(target,), output_dir=tmp_path)
 
-    with stdplot.Plotter(config, save=True, show=False).figure("sized", size=(6, 4)):
+    with stdplot.Stdplot(config, save=True, show=False).figure("sized", size=(6, 4)):
         pass
 
     # SVG sizes are in points: 6 x 4 in is 432 x 288 pt.
@@ -71,7 +71,7 @@ def test_figure_forwards_sharex() -> None:
         assert axes[0].get_shared_x_axes().joined(axes[0], axes[1])
 
 
-def test_figure_default_plotter_needs_no_config() -> None:
+def test_figure_default_stdplot_needs_no_config() -> None:
     with stdplot.figure("default", show=False) as (fig, _):
         assert isinstance(fig, Figure)
 
@@ -81,35 +81,35 @@ def test_figure_save_without_output_dir_raises() -> None:
         stdplot.figure("unsaved", save=True)
 
 
-def test_plotter_save_writes_every_target(
+def test_stdplot_save_writes_every_target(
     tmp_path: pathlib.Path, svg_png_config: stdplot.Config
 ) -> None:
-    with stdplot.Plotter(svg_png_config, save=True, show=False).figure("saved") as (_, ax):
+    with stdplot.Stdplot(svg_png_config, save=True, show=False).figure("saved") as (_, ax):
         ax.plot([1, 2, 3])
 
     assert sorted(path.name for path in tmp_path.iterdir()) == ["saved.png", "saved.svg"]
 
 
-def test_plotter_call_save_overrides_default(
+def test_stdplot_call_save_overrides_default(
     tmp_path: pathlib.Path, svg_png_config: stdplot.Config
 ) -> None:
-    plotter = stdplot.Plotter(svg_png_config, save=True, show=False)
+    plots = stdplot.Stdplot(svg_png_config, save=True, show=False)
 
-    with plotter.figure("unsaved", save=False) as (_, ax):
+    with plots.figure("unsaved", save=False) as (_, ax):
         ax.plot([1, 2, 3])
 
     assert list(tmp_path.iterdir()) == []
 
 
-def test_plotter_save_without_output_dir_raises() -> None:
+def test_stdplot_save_without_output_dir_raises() -> None:
     with pytest.raises(stdplot.MissingOutputError, match="output_dir"):
-        stdplot.Plotter(save=True).figure("unsaved")
+        stdplot.Stdplot(save=True).figure("unsaved")
 
 
 def test_plot_decorator_defaults_name_to_function_name(
     tmp_path: pathlib.Path, svg_png_config: stdplot.Config
 ) -> None:
-    @stdplot.Plotter(svg_png_config, save=True, show=False).plot()
+    @stdplot.Stdplot(svg_png_config, save=True, show=False).plot()
     def loss_curve(fig: Figure, ax: Axes) -> None:
         ax.plot([3, 2, 1])
 
@@ -121,7 +121,7 @@ def test_plot_decorator_defaults_name_to_function_name(
 def test_plot_decorator_uses_given_name(
     tmp_path: pathlib.Path, svg_png_config: stdplot.Config
 ) -> None:
-    @stdplot.Plotter(svg_png_config, show=False).plot("custom", save=True)
+    @stdplot.Stdplot(svg_png_config, show=False).plot("custom", save=True)
     def loss_curve(fig: Figure, ax: Axes) -> None:
         ax.plot([3, 2, 1])
 

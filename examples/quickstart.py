@@ -13,14 +13,17 @@ mathtext instead, so the same code runs everywhere.
 Run: python examples/quickstart.py
 """
 
-import numpy as np
+import numpy
 
-import stdplot
+from stdplot import Stdplot
 
-time = np.linspace(0.0, 10.0, 500)
-displacement = np.exp(-0.3 * time) * np.cos(2.0 * np.pi * 0.8 * time)
+if __name__ == "__main__":
+    stdplot = Stdplot()
 
-with stdplot.figure("damped_oscillation") as (fig, ax):
-    ax.plot(time, displacement)
-    ax.set_xlabel(r"Time $t$ [s]")
-    ax.set_ylabel(r"Displacement $x$ [mm]")
+    time = numpy.linspace(0.0, 10.0, 500)
+    displacement = numpy.exp(-0.3 * time) * numpy.cos(2.0 * numpy.pi * 0.8 * time)
+
+    with stdplot.figure("damped_oscillation") as (fig, ax):
+        ax.plot(time, displacement)
+        ax.set_xlabel(r"Time $t$ [s]")
+        ax.set_ylabel(r"Displacement $x$ [mm]")

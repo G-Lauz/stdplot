@@ -1,8 +1,8 @@
-"""The public drawing API: a `Plotter` session, with its `figure` and `plot` methods.
+"""The public drawing API: a `Stdplot` session, with its `figure` and `plot` methods.
 
-A `Plotter` binds a `Config` to the save and show defaults of every figure drawn with
+A `Stdplot` binds a `Config` to the save and show defaults of every figure drawn with
 it, so a notebook or a script turns saving on in one place. `stdplot.figure` and
-`stdplot.plot` are the methods of a default `Plotter`: default config, not saved, shown.
+`stdplot.plot` are the methods of a default `Stdplot`: default config, not saved, shown.
 
 Without `nrows` and `ncols`, the drawing code receives the figure's single `Axes`.
 With either of them it receives an `AxesGrid`, even for a 1x1 grid, so the type of the
@@ -35,7 +35,7 @@ R = typing.TypeVar("R")
 
 
 @dataclasses.dataclass(frozen=True)
-class Plotter:
+class Stdplot:
     """A drawing session: one config, plus whether its figures are saved and shown.
 
     The arguments of a `figure` or `plot` call override the session's defaults for
@@ -276,7 +276,7 @@ def _draw(
         yield (fig, grid.single) if single else (fig, grid)
 
 
-_DEFAULT_PLOTTER = Plotter()
+_DEFAULT_STDPLOT = Stdplot()
 # Bound methods keep the overloads, so the typed signatures are written only once.
-figure = _DEFAULT_PLOTTER.figure
-plot = _DEFAULT_PLOTTER.plot
+figure = _DEFAULT_STDPLOT.figure
+plot = _DEFAULT_STDPLOT.plot

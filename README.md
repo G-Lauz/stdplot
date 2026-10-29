@@ -16,114 +16,134 @@ PySide2) works as well. Qt is imported only when a window opens, never by `impor
 ## Usage
 ### Quickstart
 ```python
-import numpy as np
+import numpy
 
-import stdplot
+from stdplot import Stdplot
 
-time = np.linspace(0.0, 10.0, 500)
-displacement = np.exp(-0.3 * time) * np.cos(2.0 * np.pi * 0.8 * time)
+stdplot = Stdplot()
+
+time = numpy.linspace(0.0, 10.0, 500)
+displacement = numpy.exp(-0.3 * time) * numpy.cos(2.0 * numpy.pi * 0.8 * time)
 
 with stdplot.figure("damped_oscillation") as (fig, ax):
     ax.plot(time, displacement)
     ax.set_xlabel(r"Time $t$ [s]")
     ax.set_ylabel(r"Displacement $x$ [mm]")
 ```
-`stdplot.figure` opens a figure styled with the scienceplots `science`, `grid` and `ieee` styles and yields a
-plain matplotlib `Figure` and `Axes`. When the block exits, the figure is shown: inline in a Jupyter kernel, in a
-Qt window from a script, and nowhere when matplotlib's backend cannot open windows (`MPLBACKEND=Agg`). Without
-LaTeX, text is rendered with matplotlib's mathtext instead, after a single warning.
+`Stdplot()` is a drawing session with the default config. Its `figure` method opens a figure styled with the
+scienceplots `science`, `grid` and `ieee` styles and yields a plain matplotlib `Figure` and `Axes`. When the block
+exits, the figure is shown: inline in a Jupyter kernel, in a Qt window from a script, and nowhere when matplotlib's
+backend cannot open windows (`MPLBACKEND=Agg`). Without LaTeX, text is rendered with matplotlib's mathtext
+instead, after a single warning.
 
 Four objects cover the rest:
 - `Config` says *what*: the style, the size figures are drawn at, the `targets` written when saving, the
   `output_dir`, the inline `preview`, the layout engine and the display.
 - `Target` is one file: a format, an optional size (none means "the size the figure was drawn at"), a dpi and its
   margins (`Bbox.TIGHT` by default).
-- `Plotter` says *how*: it binds a `Config` to whether figures are saved and shown. `stdplot.figure` and
-  `stdplot.plot` are the methods of a default `Plotter`, which saves nothing.
+- `Stdplot` says *how*: it binds a `Config` to whether figures are saved and shown. `Stdplot()` uses the default
+  config, saves nothing and shows every figure. `import stdplot` also gives `stdplot.figure` and `stdplot.plot`,
+  the methods of such a default session.
 - `AxesGrid` is what the block receives instead of an `Axes` as soon as `nrows` or `ncols` is given.
 
-Runnable versions of the recipes below are in [`examples/`](examples).
+Runnable versions of the recipes below are in [`examples/`](examples). The recipes reuse `time` and
+`displacement` from the quickstart.
 
 ### Figure size
 ```python
-with stdplot.figure("training_loss", size=(6, 4)) as (fig, ax):
-    ...
+with stdplot.figure("damped_oscillation", size=(6, 4)) as (fig, ax):
+    ax.plot(time, displacement)
 ```
-`Config(size=stdplot.Size(6, 4))` sets it for every figure. Targets without a size, such as `SCREEN`, are
-written at the size the figure was drawn at.
+`Config(size=Size(6, 4))` sets it for every figure. Targets without a size, such as `SCREEN`, are written at the
+size the figure was drawn at.
 
 ### Saving SVG only
 ```python
-config = stdplot.Config(targets=(stdplot.SCREEN,), output_dir="figures")
+from stdplot import SCREEN, Config, Stdplot
 
-with stdplot.Plotter(config).figure("training_loss", save=True) as (fig, ax):
-    ...
+config = Config(targets=(SCREEN,), output_dir="figures")
+stdplot = Stdplot(config, save=True, show=True)
 
-for path in config.paths("training_loss"):  # the files saving writes
-    print(path)  # figures/training_loss.svg
+with stdplot.figure("damped_oscillation") as (fig, ax):
+    ax.plot(time, displacement)
 ```
 The default targets include an IEEE PGF, which needs LaTeX; `SCREEN` alone saves everywhere.
 
 ### Notebook vs script: one switch for saving
 ```python
+from stdplot import SCREEN, Config, Stdplot
+
 SAVE = False  # flip once to write every figure of the notebook
-PLOTS = stdplot.Plotter(stdplot.Config(targets=(stdplot.SCREEN,), output_dir="figures"), save=SAVE)
 
-with PLOTS.figure("training_loss", size=(6, 4)) as (fig, ax):
-    ...
+config = Config(targets=(SCREEN,), output_dir="figures")
+stdplot = Stdplot(config, save=SAVE, show=True)
 
-with PLOTS.figure("scratch", save=False) as (fig, ax):  # a call overrides the Plotter
-    ...
+with stdplot.figure("damped_oscillation", size=(6, 4)) as (fig, ax):
+    ax.plot(time, displacement)
+
+with stdplot.figure("scratch", save=False) as (fig, ax):  # a call overrides the session
+    ax.plot(time, displacement)
 ```
 In a notebook, figures appear below their cell. In a script, each figure opens a Qt window that blocks until it is
 closed; run the script under `MPLBACKEND=Agg` (or call `matplotlib.use("Agg")` first) and it never blocks. To
-never show anything, use `stdplot.Plotter(config, show=False)` or `Config(display=stdplot.Display.NONE)`.
+never show anything, use `Stdplot(config, show=False)` or `Config(display=Display.NONE)`.
 
 ### PGF for LaTeX
 ```python
-paper = stdplot.Config(targets=(stdplot.IEEE_PGF, stdplot.SCREEN), output_dir="figures")
-# 6.33589 in is the \textwidth of the thesis.
-thesis = stdplot.Config(targets=(stdplot.pgf(6.33589),), output_dir="figures")
+from stdplot import IEEE_PGF, SCREEN, Config, pgf
+
+paper = Config(targets=(IEEE_PGF, SCREEN), output_dir="figures")
+# 6.33589 may be the \textwidth of a paper.
+thesis = Config(targets=(pgf(6.33589),), output_dir="figures")
 ```
 `IEEE_PGF` is one IEEE column wide, `ieee_pgf(scale=0.5)` half of one, and `pgf(width, aspect)` any width. They
 keep standard margins (`Bbox.STANDARD`), so the PGF is exactly as wide as asked; include it with
-`\input{figures/name.pgf}`. Saving a PGF needs the configured TeX system (`pdflatex` by default) on the PATH:
-without it, `LatexNotFoundError` is raised before your drawing code runs.
+`\input{figures/damped_oscillation.pgf}`. Saving a PGF needs the configured TeX system (`pdflatex` by default) on
+the PATH: without it, `LatexNotFoundError` is raised before your drawing code runs.
 
 ### Subplot options
 ```python
-with stdplot.figure("signals", nrows=2, ncols=2, sharex=True) as (fig, axes):
-    axes[0, 1].plot(...)  # by row and column
-    image = axes[3].imshow(...)  # the 4th axes, counted row by row
-    for ax in axes:
-        ax.set_xlabel("Time [s]")
-    fig.colorbar(image, ax=axes)  # an AxesGrid goes wherever matplotlib takes several axes
+with stdplot.figure("grid", nrows=2, ncols=2, sharex=True) as (fig, axes):
+    for ax in axes:  # every axes, row by row
+        ax.plot(time, displacement)
+    axes[0, 0].set_title("Top left")  # by row and column
+    axes[3].set_title("Bottom right")  # the 4th axes, counted row by row
 ```
 `sharex`, `sharey`, `width_ratios`, `height_ratios`, `subplot_kw` and `gridspec_kw` are forwarded to matplotlib's
-`Figure.subplots`. A 3D axes is still typed `Axes`; cast it to reach the 3D methods:
+`Figure.subplots`. Being iterable, an `AxesGrid` goes wherever matplotlib takes several axes, such as
+`fig.colorbar(image, ax=axes)`.
+
+A 3D axes is still typed `Axes`; cast it to reach the 3D methods:
 ```python
 import typing
 
+import numpy
 from mpl_toolkits.mplot3d import Axes3D
 
+x, y = numpy.meshgrid(numpy.linspace(-2.0, 2.0, 60), numpy.linspace(-2.0, 2.0, 60))
+
 with stdplot.figure("saddle_point", subplot_kw={"projection": "3d"}) as (fig, ax):
-    typing.cast(Axes3D, ax).plot_surface(x, y, z)
+    ax3d = typing.cast(Axes3D, ax)
+    ax3d.plot_surface(x, y, x**2 - y**2, cmap="viridis")
 ```
 
 ### Two styles for the same figure
 The style applies while the figure is drawn, because matplotlib reads fonts and `text.usetex` when each artist is
 created. One drawn figure therefore cannot be written under two styles: draw it once per config.
 ```python
-latex = stdplot.Config(targets=(stdplot.pgf(6.33589),), output_dir="figures")
-plain = stdplot.Config(
-    style=stdplot.Style().without_latex(),
-    targets=(stdplot.Target(stdplot.Format.PNG, dpi=300),),
+from stdplot import Config, Format, Stdplot, Style, Target, pgf
+
+latex = Config(targets=(pgf(6.33589),), output_dir="figures")
+plain = Config(
+    style=Style().without_latex(),
+    targets=(Target(Format.PNG, dpi=300),),
     output_dir="figures",
 )
 
 for config in (latex, plain):
-    with stdplot.Plotter(config, save=True, show=False).figure("umap") as (fig, ax):
-        draw_umap(ax)
+    stdplot = Stdplot(config, save=True, show=False)
+    with stdplot.figure("damped_oscillation") as (fig, ax):
+        ax.plot(time, displacement)
 ```
 
 

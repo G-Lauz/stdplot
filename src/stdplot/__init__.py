@@ -25,7 +25,7 @@ from stdplot.application import (
     ieee_pgf,
     pgf,
 )
-from stdplot.presentation.api import Plotter, figure, plot
+from stdplot.presentation.api import Stdplot, figure, plot
 
 __all__ = [
     "IEEE_PGF",
@@ -40,8 +40,8 @@ __all__ = [
     "Layout",
     "MissingDependencyError",
     "MissingOutputError",
-    "Plotter",
     "Size",
+    "Stdplot",
     "StdplotError",
     "Style",
     "SubplotOptions",
